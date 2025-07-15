@@ -129,6 +129,8 @@ GLuint textureLoad(const char* filename){
 
 GLuint textureLoadFromFont(const char* filename, const char* string, int size, SDL_Color color){
 	//load font and render text to SDL surface
+		SDL_Log("text surface failed: %s\n", filename);
+	
 	TTF_Init();
 	TTF_Font* font = TTF_OpenFont(filename, size);
 	SDL_Surface* textureSurface2 = TTF_RenderUTF8_Blended(font, string, color);

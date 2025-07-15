@@ -4,8 +4,8 @@
 #include <thread>
 #include <vector>
 #include <string>
-#include <wiringPi.h>
-#include <wiringPiSPI.h>
+#include "wiringPi.h"
+#include "wiringPiSPI.h"
 #include <GLES3/gl3.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengles2.h>
@@ -25,6 +25,8 @@ class keyboard{
 
 public:
 	keyboard();
+int  startSerialListener(const std::string& device = "/dev/ttyUSB0");
+ int  installProfileZip(const std::string& zipPath);
 	int run();
 
 private:
@@ -48,6 +50,10 @@ private:
 		//keyFNevent
 
 	//load initial profile:
+
+	// keyboard.h  (add to public:)
+bool handleIncomingZip(int fd);                 // internal
+
 	int loadProfile(const char* profileFolderName, bool mainThread=true);
 		int parseLine(std::string line);
 		std::vector<std::string> splitPreserveQuotes(const std::string& str);

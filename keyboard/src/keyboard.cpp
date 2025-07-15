@@ -2,6 +2,14 @@
 
 #include "keyboard.h"
 
+#include <thread>
+#include <fstream>
+#include <filesystem>
+#include <fcntl.h>
+#include <termios.h>
+#include <unistd.h>
+#include <system_error>
+
 using namespace std;
 
 #define CSp0 17
@@ -11,6 +19,116 @@ using namespace std;
 #define SPIchannel 0
 #define SPIspeed 500000
 
+int keyboard::installProfileZip(const std::string& zipPath)
+{
+    namespace fs = std::filesystem;
+    const fs::path destRoot = "profiles";
+
+    /* 1. make sure profiles/ exists  */
+    fs::create_directories(destRoot);
+
+    /* 2. extract into a temp dir inside profiles/ */
+    const fs::path tmpDir = destRoot / "__tmp_unzip__";
+    fs::remove_all(tmpDir);                  // clean previous temp
+    fs::create_directory(tmpDir);
+
+    std::string cmd = "unzip -o -qq \"" + zipPath + "\" -d \"" + tmpDir.string() + "\"";
+    if (std::system(cmd.c_str()) != 0) {
+        std::cerr << "unzip failed\n";
+        return -1;
+    }
+
+    /* 3. find first top‑level dir in tmpDir */
+    std::string profileName;
+    for (const auto& entry : fs::directory_iterator(tmpDir)) {
+        if (entry.is_directory()) {
+            profileName = entry.path().filename().string();   // e.g. "eng"
+            break;
+        }
+    }
+    if (profileName.empty()) {
+        std::cerr << "zip had no top level directory\n";
+        return -2;
+    }
+
+    /* 4. move that directory into profiles/ (overwrite if exists) */
+    const fs::path target = destRoot / profileName;
+    fs::remove_all(target);                 // overwrite old profile
+    fs::rename(tmpDir / profileName, target);
+    fs::remove_all(tmpDir);                 // clean temp
+
+    /* 5. hot‑swap */
+    if (swapProfile(profileName.c_str()) != 0) {
+        std::cerr << "profile swap failed\n";
+        return -3;
+    }
+    std::cout << "✓ Installed & loaded profile \"" << profileName << "\"\n";
+    return 0;
+}
+
+
+
+
+static int openSerial(const char* dev, int baud = B115200)
+{
+    int fd = ::open(dev, O_RDONLY | O_NOCTTY);
+    if (fd < 0) throw std::system_error(errno, std::generic_category(), "open");
+    termios tty{};
+    tcgetattr(fd, &tty);
+    cfsetospeed(&tty, baud);
+    cfsetispeed(&tty, baud);
+    cfmakeraw(&tty);
+    tty.c_cflag |= (CLOCAL | CREAD);
+    tcsetattr(fd, TCSANOW, &tty);
+    return fd;
+}
+
+bool keyboard::handleIncomingZip(int fd)
+{
+    /*‑‑ read 4‑byte length header ‑‑*/
+    uint8_t hdr[4];
+    if (read(fd, hdr, 4) != 4) return false;
+    uint32_t len = (hdr[0]<<24)|(hdr[1]<<16)|(hdr[2]<<8)|hdr[3];
+    if (len == 0 || len > 10*1024*1024) return false;   // sanity
+
+    std::string tmp = "/tmp/profile.zip";
+    std::ofstream out(tmp, std::ios::binary);
+    uint8_t buf[4096];
+    uint32_t readTot = 0;
+
+    while (readTot < len) {
+ssize_t n = ::read(fd, buf, std::min<std::size_t>(sizeof(buf), len - readTot));
+        if (n <= 0) return false;
+        out.write((char*)buf, n);
+        readTot += n;
+    }
+    out.close();
+    std::cout << "Received zip ("<<len<<"bytes). Unpacking…\n";
+
+    /*‑‑ unzip + hot‑swap ‑‑*/
+    if (installProfileZip(tmp) != 0) {
+        std::cerr << "installProfileZip failed\n";
+        return false;
+    }
+    return true;
+}
+
+int keyboard::startSerialListener(const std::string& dev)
+{
+    std::thread([this, dev]{
+        try {
+            int fd = openSerial(dev.c_str());
+            while (true) {
+                if (!handleIncomingZip(fd))
+                    std::cerr << "Serial transfer error  waiting for next\n";
+            }
+            ::close(fd);
+        } catch (const std::exception& e) {
+            std::cerr << "Serial listener fatal: " << e.what() << "\n";
+        }
+    }).detach();        // run forever
+    return 0;
+}
 
 
 keyboard::keyboard(){
@@ -72,7 +190,7 @@ int keyboard::run(){
 	//run hall effect sensors
 	bool keyboardActive = true;
 	bool* on = &keyboardActive;
-	
+	startSerialListener("/dev/ttyS0");
 	loadProfile("eng");
 	
 	//run numpad profile initialization:
@@ -322,6 +440,10 @@ int keyboard::assignKey(int keyID, int outputType, string outputString){
 	if (outputType <= OUTPUTPROFILESWITCH){
 		keys[keyID].outputType = outputType;
 		keys[keyID].output = outputString;
+
+		cout << "Key ID " << keyID << "...\n";
+		cout << "Key Type " << outputType << "...\n";
+		cout << "Key String " << outputString << "...\n";
 	}
 	else {
 		SDL_Log("Key assignment error: output of unknown type: %d", outputType);
@@ -472,8 +594,11 @@ int keyboard::loadProfile(const char* profileFolderName, bool mainThread){
 		cout << "No layout.prof file found in " << path << endl;
 		return -1;
 	}
-	cout << "Loading layout.prof..." << endl;
-	
+	// cout << "Loading layout.prof..." << endl;
+	char cwd[PATH_MAX];
+	if(getcwd(cwd,sizeof(cwd))!= nullptr){
+		cout << "Current directory:" << cwd << endl;
+	}
 	//at this point it's okay to clear the graphics memory:
 	if (mainThread)
 		keyboardWindow->clearGraphicsMemory();
@@ -631,6 +756,7 @@ int keyboard::parseLine(string line){
 		return 0;	//comment
 	}
 	else if (parts[0] == "K"){	//assignKey(int keyID, int outputType, std::string outputString)
+		cout << "Parts size " << parts.size() << "...\n";
 		if (parts.size() != 4)
 			return 2;	//incorrect number of parameters
 		//translate parameters

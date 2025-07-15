@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <wiringPi.h>
-#include <wiringPiSPI.h>
+#include "wiringPi.h"
+#include "wiringPiSPI.h"
 #include <unistd.h>
 
 class hallEffectReader {
