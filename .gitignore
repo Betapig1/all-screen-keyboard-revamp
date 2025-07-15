@@ -12,3 +12,7 @@ out
 test.js
 test.py
 keyboard/vcpkg/
+<<<<<<< HEAD
+=======
+.vscode/settings.json
+>>>>>>> 8092a4b81fc257ca373d9552f833f8a5447a2eb8

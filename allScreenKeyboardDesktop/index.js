@@ -517,44 +517,39 @@ sock.on('end', () => {
 
 
 
+ipcMain.handle('sendFile', async(event, arg) => {
+  console.log("SENDING FILE");
 
-ipcMain.handle('sendFile', async(event, arg)=>{
+  const PIPE_PATH = '\\\\.\\pipe\\keyboard_serial'; // Named pipe
 
-  console.log("SENDING FILE")
-  const PIPE_PATH = '\\\\.\\pipe\\keyboard_serial';   // must match VBox “Host Pipe”
+  if (!fs.existsSync(activeZip)) {
+    console.error(`ZIP file "${activeZip}" not found`);
+    return;
+  }
 
+  const zipBuf = fs.readFileSync(activeZip);
+  const lenBuf = Buffer.alloc(4);
+  lenBuf.writeUInt32BE(zipBuf.length + 1, 0);  // ✅ Add 1 for the type byte
 
-// ---------------- sanity checks ----------------------------------
-if (!fs.existsSync(activeZip)) {
-  console.error(` ZIP file "${activeZip}" not found`);
-  process.exit(1);
-}
-console.log(activeZip,PIPE_PATH)
-const zipBuf = fs.readFileSync(activeZip);
-const lenBuf = Buffer.alloc(4);
-lenBuf.writeUInt32BE(zipBuf.length, 0);
+  const sock = net.createConnection({ path: PIPE_PATH });
 
-console.log(`ZIP size: ${zipBuf.length} bytes`);
-console.log(`Opening pipe: ${PIPE_PATH}`);
+  sock.on('connect', () => {
+    console.log('Pipe connected. Sending header + type + ZIP…');
+    sock.write(lenBuf);                     // 4‑byte length
+    sock.write(Buffer.from([0x01]));        // ✅ type byte: 0x01 = ZIP
+    sock.write(zipBuf);                     // ZIP payload
+    sock.end();                             // Done
+  });
 
-// ---------------- connect & send ---------------------------------
-const sock = net.createConnection({ path: PIPE_PATH });
+  sock.on('error', (err) => {
+    console.error('Pipe error:', err.message);
+  });
 
-sock.on('connect', () => {
-  console.log(' Pipe connected  sending header + data …');
-  sock.write(lenBuf);   // 4‑byte length header
-  sock.write(zipBuf);   // ZIP payload
-  sock.end();           // done – politely close
+  sock.on('end', () => {
+    console.log('Pipe closed, transfer finished.');
+  });
 });
 
-sock.on('error', (err) => {
-  console.error(' Pipe error:', err.message);
-});
-
-sock.on('end', () => {
-  console.log('Pipe closed transfer finished');
-});
-})
 
 
 

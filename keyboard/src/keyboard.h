@@ -52,7 +52,7 @@ private:
 	//load initial profile:
 
 	// keyboard.h  (add to public:)
-bool handleIncomingZip(int fd);                 // internal
+bool handleIncomingMessage(int fd);                 // internal
 
 	int loadProfile(const char* profileFolderName, bool mainThread=true);
 		int parseLine(std::string line);
