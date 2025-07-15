@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+
+    <title>Keyboard Customizer</title>
+    <link rel="stylesheet" href="../styles/mainPage.css">
+    <link rel="stylesheet" href="../styles/keyCanvas.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+  
+<nav class="navbar navbar-expand-lg bg-dark border-bottom border-body" data-bs-theme="dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Navbar</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="true" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="navbar-collapse collapse show" id="navbarColor01" style="">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link" aria-current="page" href="#" id="home">Home</a></li>
+        <li class="nav-item"><a class="nav-link active" href="#" id="profile">Create Profile</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" id="image">Add Images</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" id="font">Add fonts</a></li>
+      </ul>
+
+    </div></div></nav>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+  
+  </head>
+  <body class="bg-dark">
+  <div class="dropdown">
+    <!-- the button -->
+    <button
+      class="btn btn-outline-primary dropdown-toggle"
+      type="button"
+      id="fontsButton"
+      data-bs-toggle="dropdown"
+      aria-expanded="false">
+      Choose an uploaded font
+    </button>
+
+    <!-- menu -->
+    <ul class="dropdown-menu shadow" aria-labelledby="fontsBtn" id="fontsMenu">
+      <!-- search box lives *inside* the menu -->
+      <li class="px-3 py-2">
+        <input type="search"
+               class="form-control"
+               placeholder="Type to filter…"
+               id="fontsSearch">
+      </li>
+      <li><hr class="dropdown-divider"></li>
+
+    </ul>
+  </div>
+
+    <div class="dropdown ">
+    <!-- the button -->
+    <button
+      class="btn btn-outline-primary dropdown-toggle"
+      type="button"
+      id="characterButton"
+      data-bs-toggle="dropdown"
+      aria-expanded="false">
+      Choose a character in the font
+    </button>
+
+    <!-- menu -->
+    <ul class="dropdown-menu shadow bg-dark-subtle" aria-labelledby="characterBtn" id="characterMenu">
+      <!-- search box lives *inside* the menu -->
+      <li class="px-3 py-2">
+        <input type="search"
+               class="form-control"
+               placeholder="Type to filter…"
+               id="characterSearch">
+      </li>
+      <li><hr class="dropdown-divider"></li>
+
+    </ul>
+  </div>
+
+
+    <button type="button"
+          class="btn btn-success"
+          id="uploadImage">
+  Upload an Image (png)
+  </button>
+    <canvas id="canvas" width="384" height="384" class="bg-secondary d-block mx-auto text-center"></canvas>
+
+<script src="../renderer.js"></script>
+
+  <script>
+    // Wait until the DOM is ready; by this point your own population code
+    // should already have added the .dropdown-item links.
+    document.addEventListener('DOMContentLoaded', () => {
+      const menu      = document.getElementById('fontsMenu');
+      const searchBox = document.getElementById('fontsSearch');
+      const btn       = document.getElementById('fontsButton');
+
+      if (!menu || !searchBox) return; // safety
+
+      // Filter list every time the user types
+      const filterList = () => {
+        const term  = searchBox.value.trim().toLowerCase();
+        const items = menu.querySelectorAll('.dropdown-item');
+        items.forEach(a =>
+          a.classList.toggle('d-none',
+            !a.textContent.toLowerCase().includes(term))
+        );
+      };
+      searchBox.addEventListener('input', filterList);
+
+      // Optional niceties ---------------------------------------------
+      // 1. Reset filter and autofocus search when the menu opens
+      btn.addEventListener('shown.bs.dropdown', () => {
+        searchBox.value = '';
+        filterList();
+        searchBox.focus();
+      });
+
+      // 2. Replace button label when a font is chosen (keeps dropdown logic simple)
+      menu.addEventListener('click', e => {
+        const link = e.target.closest('.dropdown-item');
+        if (!link) return;
+        e.preventDefault();
+        btn.textContent   = link.textContent;
+        btn.dataset.value = link.dataset.value;
+        bootstrap.Dropdown.getInstance(btn)?.hide();
+      });
+    });
+  </script>
+
+
+  <script>
+    // Wait until the DOM is ready; by this point your own population code
+    // should already have added the .dropdown-item links.
+    document.addEventListener('DOMContentLoaded', () => {
+      const menu      = document.getElementById('characterMenu');
+      const searchBox = document.getElementById('characterSearch');
+      const btn       = document.getElementById('characterButton');
+
+      if (!menu || !searchBox) return; // safety
+
+      // Filter list every time the user types
+      const filterList = () => {
+        const term  = searchBox.value.trim().toLowerCase();
+        const items = menu.querySelectorAll('.dropdown-item');
+        items.forEach(a =>
+          a.classList.toggle('d-none',
+            !a.textContent.toLowerCase().includes(term))
+        );
+      };
+      searchBox.addEventListener('input', filterList);
+
+      // Optional niceties ---------------------------------------------
+      // 1. Reset filter and autofocus search when the menu opens
+      btn.addEventListener('shown.bs.dropdown', () => {
+        searchBox.value = '';
+        filterList();
+        searchBox.focus();
+      });
+
+      // 2. Replace button label when a font is chosen (keeps dropdown logic simple)
+      menu.addEventListener('click', e => {
+        const link = e.target.closest('.dropdown-item');
+        if (!link) return;
+        e.preventDefault();
+        btn.textContent   = link.textContent;
+        btn.dataset.value = link.dataset.value;
+        bootstrap.Dropdown.getInstance(btn)?.hide();
+      });
+    });
+  </script>
+
+
+
+      <div class="text-center"> 
+ 
+  
+  <button type="button"
+          class="btn btn-success"
+          id="saveKey">
+  Save Key
+  </button>
+    </div>
+  
+  </body>
+</html>

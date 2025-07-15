@@ -1,0 +1,10 @@
+allScreenKeyboardDesktop/fonts
+allScreenKeyboardDesktop/node_modules
+allScreenKeyboardDesktop/exports
+allScreenKeyboardDesktop/profiles
+allScreenKeyboardDesktop/templateImages
+glyphs
+node_modules
+out
+test.js
+test.py

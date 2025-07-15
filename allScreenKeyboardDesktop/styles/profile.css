@@ -1,0 +1,42 @@
+/* top‑level container */
+#keyboard {
+  display: flex;
+  gap: 16px;          /* space between main / nav / num */
+  padding: 16px;
+}
+
+/* three independent grids */
+#main-block {
+  display: grid;
+  grid-template-columns: repeat(15, var(--unit));
+  grid-auto-rows: var(--unit);
+  gap: var(--gap);
+}
+
+#nav-block {
+  display: grid;
+  grid-template-columns: repeat(3, var(--unit));
+  grid-auto-rows: var(--unit);
+  gap: var(--gap);
+}
+
+#numpad-block {
+  display: grid;
+  grid-template-columns: repeat(4, var(--unit));
+  grid-auto-rows: var(--unit);
+  gap: var(--gap);
+}
+
+/* actual key styling */
+.kb-key {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  user-select:none;
+  border:1px solid #ccc;
+  border-radius:4px;
+  background:#929090;
+  font:14px/1.1 "Inter",sans-serif;
+  cursor:pointer;
+}
+.kb-key:active { background:#e7e7e7; }

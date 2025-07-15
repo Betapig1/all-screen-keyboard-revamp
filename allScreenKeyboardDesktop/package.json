@@ -1,0 +1,25 @@
+{
+  "name": "allscreenkeyboarddesktop",
+  "version": "1.0.0",
+  "description": "Desktop application to update the design of the keyboard at runtime",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron ."
+  },
+  "author": "Taylor Hall",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^37.2.1"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "bootstrap": "^5.3.7",
+    "convert-svg-to-png": "^0.7.1",
+    "electron-tooltip": "^1.1.5",
+    "fonteditor-core": "^2.5.4",
+    "get-windows": "^9.2.0",
+    "sharp": "^0.34.3",
+    "zip-local": "^0.3.5"
+  }
+}

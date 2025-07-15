@@ -1,0 +1,22 @@
+html{
+    color: white;
+}
+
+
+
+#title{
+    display: flex;
+    margin: auto;
+    align-items: center;
+    align-self: center;
+    align-content: center;
+    justify-content: center;
+}
+
+
+:root {
+  --gap: 4px;
+  --unit: 46px;   /* 1 key‑unit (width & height) */
+}
+
+
