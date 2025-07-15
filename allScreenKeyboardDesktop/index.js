@@ -495,23 +495,17 @@ if (!fs.existsSync(activeZip)) {
   process.exit(1);
 }
 console.log(activeZip,PIPE_PATH)
-const zipBuf = fs.readFileSync(activeZip);
-const lenBuf = Buffer.alloc(4);
-lenBuf.writeUInt32BE(zipBuf.length, 0);
+  const zipBuf = fs.readFileSync(zipPath);
+  const lenBuf = Buffer.alloc(4);
+  lenBuf.writeUInt32BE(zipBuf.length + 1, 0);   // +1 for type byte
 
-console.log(`ZIP size: ${zipBuf.length} bytes`);
-console.log(`Opening pipe: ${PIPE_PATH}`);
-
-// ---------------- connect & send ---------------------------------
-const sock = net.createConnection({ path: PIPE_PATH });
-
-sock.on('connect', () => {
-  console.log(' Pipe connected sending header + data …');
-  sock.write(lenBuf);   // 4‑byte length header
-  sock.write(zipBuf);   // ZIP payload
-  sock.end();           // done – politely close
-});
-
+  const sock = net.createConnection({ path: pipe });
+  sock.on('connect', () => {
+    sock.write(lenBuf);
+    sock.write(Buffer.from([0x01]));   // type = ZIP
+    sock.write(zipBuf);
+    sock.end();
+  });
 sock.on('error', (err) => {
   console.error(' Pipe error:', err.message);
 });
