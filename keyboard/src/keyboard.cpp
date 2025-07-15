@@ -64,7 +64,6 @@ int keyboard::installProfileZip(const std::string &zipPath)
 	fs::rename(tmpDir / profileName, target);
 	fs::remove_all(tmpDir); // clean temp
 
-<<<<<<< HEAD
 	/* 5. hot‑swap */
 	if (swapProfile(profileName.c_str()) != 0)
 	{
@@ -72,9 +71,6 @@ int keyboard::installProfileZip(const std::string &zipPath)
 		return -3;
 	}
 	std::cout << "✓ Installed & loaded profile \"" << profileName << "\"\n";
-=======
-	std::cout << " Installed profile \"" << profileName << "\"\n";
->>>>>>> 8092a4b81fc257ca373d9552f833f8a5447a2eb8
 	return 0;
 }
 
@@ -134,22 +130,13 @@ bool keyboard::handleIncomingMessage(int fd)
 		out.write(reinterpret_cast<char *>(payload.data()),
 				  static_cast<std::streamsize>(payload.size()));
 		out.close();
-<<<<<<< HEAD
-		std::cout << "Received ZIP (" << payload.size() << " bytes)…\n";
-=======
 		std::cout << "Received ZIP (" << payload.size() << " bytes)…\n";
->>>>>>> 8092a4b81fc257ca373d9552f833f8a5447a2eb8
 		return installProfileZip(tmp) == 0;
 	}
 	case MSG_TEXT:
 	{
 		std::string cmd(payload.begin(), payload.end()); // UTF‑8
 		std::cout << "CMD: \"" << cmd << "\"\n";
-<<<<<<< HEAD
-		/* TODO: parse and act on the command here.
-		   Example:  if (cmd.starts_with("swap:"))
-						 swapProfile(cmd.substr(5).c_str()); */
-=======
 		/*hot‑swap */
 		if (swapProfile(cmd) != 0)
 		{
@@ -157,7 +144,6 @@ bool keyboard::handleIncomingMessage(int fd)
 			return false;
 		}
 		std::cout << " Loaded profile \"" << cmd << "\"\n";
->>>>>>> 8092a4b81fc257ca373d9552f833f8a5447a2eb8
 		return true;
 	}
 	default:
@@ -175,11 +161,7 @@ int keyboard::startSerialListener(const std::string &dev)
             int fd = openSerial(dev.c_str());
             while (true) {
                 if (!handleIncomingMessage(fd))
-<<<<<<< HEAD
-                    std::cerr << "Serial transfer error – waiting for next\n";
-=======
                     std::cerr << "Serial transfer error waiting for next\n";
->>>>>>> 8092a4b81fc257ca373d9552f833f8a5447a2eb8
             }
             ::close(fd);
         } catch (const std::exception& e) {
