@@ -12,3 +12,4 @@ out
 test.js
 test.py
 keyboard/vcpkg/
+.vscode/settings.json

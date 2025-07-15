@@ -64,13 +64,7 @@ int keyboard::installProfileZip(const std::string &zipPath)
 	fs::rename(tmpDir / profileName, target);
 	fs::remove_all(tmpDir); // clean temp
 
-	/* 5. hot‑swap */
-	if (swapProfile(profileName.c_str()) != 0)
-	{
-		std::cerr << "profile swap failed\n";
-		return -3;
-	}
-	std::cout << "✓ Installed & loaded profile \"" << profileName << "\"\n";
+	std::cout << " Installed profile \"" << profileName << "\"\n";
 	return 0;
 }
 
@@ -130,16 +124,20 @@ bool keyboard::handleIncomingMessage(int fd)
 		out.write(reinterpret_cast<char *>(payload.data()),
 				  static_cast<std::streamsize>(payload.size()));
 		out.close();
-		std::cout << "Received ZIP (" << payload.size() << " bytes)…\n";
+		std::cout << "Received ZIP (" << payload.size() << " bytes)…\n";
 		return installProfileZip(tmp) == 0;
 	}
 	case MSG_TEXT:
 	{
 		std::string cmd(payload.begin(), payload.end()); // UTF‑8
 		std::cout << "CMD: \"" << cmd << "\"\n";
-		/* TODO: parse and act on the command here.
-		   Example:  if (cmd.starts_with("swap:"))
-						 swapProfile(cmd.substr(5).c_str()); */
+		/*hot‑swap */
+		if (swapProfile(cmd) != 0)
+		{
+			std::cerr << "profile swap failed\n";
+			return false;
+		}
+		std::cout << " Loaded profile \"" << cmd << "\"\n";
 		return true;
 	}
 	default:
